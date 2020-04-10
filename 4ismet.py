@@ -1,4 +1,23 @@
 
+def GridMaker( M, N, tau, l):
+    h = l / N 
+    #dx
+    x = []
+    for i in range(N + 1):
+        x.append(i * h)
+    #dt
+    t = []
+    for j in range(M + 1):
+        t.append(j * tau)
+    #buildin a matrix
+    Ut = []
+    for i in range(N + 1):
+        Ut.append([])
+        for j in range(M + 1):
+            Ut[i].append(0)
+    return(Ut)
+
+
 def numericalmethods_lab_1():
 
     Uxt = lambda t, x, a : 4*(x**3+6*a*t*x)+2
@@ -15,20 +34,8 @@ def numericalmethods_lab_1():
     l = 1.
     h = l / N
 
-    #dx
-    x = []
-    for i in range(N + 1):
-        x.append(i * h)
-    #dt
-    t = []
-    for j in range(M + 1):
-        t.append(j * tau)
-    #buildin a matrix
-    Ut = []
-    for i in range(N + 1):
-        Ut.append([])
-        for j in range(M + 1):
-            Ut[i].append(0)
+    Ut = GridMaker(M,N,tau,l)
+
     #bottom line
     for i in range(N + 1):
         Ut[0][i] = Ux0(i*h,a)
@@ -76,6 +83,73 @@ def numericalmethods_lab_1():
     print('------------------------------------')
     print(' :')
     explicit()
+
+
+def numericalmethods_lab_2():
+
+    from math import cos, pi 
+
+    Utx0 = lambda x : 2*x + 1
+
+    U1t = lambda t : 0
+    U0t = lambda t : 2*t + 1
+    Ux0 = lambda x : (1 - x)*cos(pi*x/2)
+
+
+    M = 10
+    N = 10
+    a = 1.
+    T = 0.01
+    tau = T/M
+    l = 1.
+    h = l / N
+
+    Ut = GridMaker(M,N,tau,l)
+
+    #bottom line
+    for i in range(N + 1):
+        Ut[0][i] = Ux0(i*h)
+    #gamma for comfort
+    gamma = a*(tau/(h**2))
+    #walls
+    for j in range(M + 1):
+        Ut[j][0] = U0t(j*tau)
+        Ut[j][N] = U1t(j*tau)
+
+    def output(Ut):
+        for j in range(M + 1):
+            print('-----------------')
+            for i in range(N + 1):
+                print(abs(Ut[j][i] - Uxt(j*tau, i*h, a)))
+
+
+    def explicit():
+        #calculation
+        for j in range(M):
+            for i in range(1, N):
+                Ut[j+1][i] = Ut[j][i] + gamma*(Ut[j][i+1] - 2*Ut[j][i] + Ut[j][i-1])
+        output(Ut)
+        
+
+    def unexplicit():
+
+        #koefs of tridiagonal matrix
+        A = gamma
+        B = gamma
+        C = 2 * gamma + 1 
+        #calculation
+        for j in range(1,M+1):
+            alpha = [0]
+            beta = [Uxt(j*tau,0,a)]
+            for i in range(N+1):
+                alpha.append(B/(C - alpha[i]*A))
+                beta.append((A*beta[i] + Ut[j-1][i])/(C - alpha[i]*A))
+            for i in reversed(range(1,N)):
+                Ut[j][i] = alpha[i+1]*Ut[j][i+1] + beta[i+1]
+        output(Ut)
+
+    explicit()
+
 
 
 def numericalmethods_lab_3_GRAMMAR():
@@ -210,7 +284,7 @@ def numericalmethods_lab_3_GRAMMAR():
 
 if __name__ == "__main__":
 
-    numericalmethods_lab_3_GRAMMAR()
+    numericalmethods_lab_2()
 
 #            Ut[i][j+1] = 2*Ut[i][j] - Ut[i][j-1] + (gamma**2)*(Ut[i+1][j] - 2*Ut[i][j] + Ut[i-1][j])
 #numericalmethods_lab_1()
